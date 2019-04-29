@@ -1,0 +1,70 @@
+---
+title: "Course7 (Regression Models) Project"
+output:
+  html_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options(warn = -1)
+```
+
+
+#### Executive Summary
+In this report, I analyzed the *mtcars* dataset to answer the following two questions using regression models and exploratory data analyses: (1) Is an automatic or manual transmission better for MPG? (2) Quantify the MPG difference between automatic and manual transmissions. The results indicate that holding other variables constant, MPGs are higher for manual cars than automatic cars, and that the estimated difference in MPG is 7.245.
+
+#### Exploratory Data Analysis
+The dataset was from the 1974 Motor Trend US magazine, and it comprises fuel consumption and 10 aspects of automobile design and performance for 32 automobiles (1973-74 models). An exploratory analysis was performed as a first step to address the two research questions. The first plot in the appendix compares the MPG (miles per gallon) for automatic and manual cars, and it shows that on average, manual cars have higher MPGs than automatic cars.
+
+#### Q1: Is an Automatic or Manual Transmission Better for MPG?
+To answer this question, multiple regression models were fitted.
+
+```{r models, cache=TRUE}
+mtcars$Transmission[mtcars$am == 0] <- "Automatic"
+mtcars$Transmission[mtcars$am == 1] <- "Manual"
+fit1 <- lm(mpg ~ Transmission, mtcars)
+fit2 <- lm(mpg ~ Transmission + cyl, mtcars)
+fit3 <- lm(mpg ~ Transmission + cyl + disp, mtcars)
+fit4 <- lm(mpg ~ Transmission + cyl + disp + hp, mtcars)
+fit5 <- lm(mpg ~ Transmission + cyl + disp + hp + drat, mtcars)
+fit6 <- lm(mpg ~ Transmission + cyl + disp + hp + drat + wt, mtcars)
+fit7 <- lm(mpg ~ Transmission + cyl + disp + hp + drat + wt + qsec, mtcars)
+fit8 <- lm(mpg ~ Transmission + cyl + disp + hp + drat + wt + qsec + factor(vs), mtcars)
+fit9 <- lm(mpg ~ Transmission + cyl + disp + hp + drat + wt + qsec + factor(vs) + gear, mtcars)
+fit10 <- lm(mpg ~ Transmission + cyl + disp + hp + drat + wt + qsec + factor(vs) + gear + carb, mtcars)
+```
+
+The best model was selected using the nested model search method.
+
+```{r model selection}
+anova(fit1, fit2, fit3, fit4, fit5, fit6, fit7, fit8, fit9, fit10)
+```
+
+The comparisons above show that *fit6* was the most parsimonious model. A residual plot and a Q-Q plot were created to diagnose this model. As show in second and third plots in the appendix, there is no obvious correlation between the residuals and regressors, indicating that the model was relatively unbiased. The Q-Q plot shows that the standardized residuals were normally distributed. Therefore, the model was selected.
+
+As shown below, the regressor *Transmission* has a positive coefficient 1.37506, indicating that holing the number of cylinders, displacement, gross horsepower, rear axle ratio, and weight constant, the average MPG is higher for manual cars compared with automatic cars.
+
+```{r regression}
+summary(fit6)$coef[2]
+```
+
+#### Q2: Quantify the MPG Difference between Automatic and Manual Transmissions.
+As shown below, the simple regression model with only one regressor, transmission, shows that the estimated MPG difference between manual cars and automatic cars is 7.245.
+
+```{r difference, cache=TRUE}
+summary(fit1)$coef[2]
+```
+
+### Appendix
+```{r plot1, fig.width=6, fig.height=5}
+library(ggplot2)
+g1 <- ggplot(data = mtcars, aes(x = Transmission, y = mpg, fill = Transmission)) + geom_boxplot()
+g1 <- g1 + ylab("MPG (Miles per Gallon)") + ggtitle("MPGs of Automatic and Manual Cars")
+g1
+```
+
+```{r diagonostics, fig.width=6, fig.height=6}
+plot(fit6, which = c(1, 1))
+plot(fit6, which = c(2, 1))
+```
